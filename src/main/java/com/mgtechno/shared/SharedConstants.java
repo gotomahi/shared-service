@@ -6,4 +6,6 @@ public interface SharedConstants {
     String BEARER = "Bearer";
     String TAB_SPACE = " ";
     String COLON = ":";
+    String PERIOD = ".";
+    String PERIOD_REGEX = "\\.";
 }

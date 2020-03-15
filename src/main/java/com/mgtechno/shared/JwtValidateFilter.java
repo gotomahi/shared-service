@@ -1,6 +1,10 @@
 package com.mgtechno.shared;
 
 import org.json.JSONObject;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.jwt.JwtHelper;
+import org.springframework.security.jwt.crypto.sign.RsaSigner;
+import org.springframework.security.rsa.crypto.KeyStoreKeyFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -11,12 +15,18 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Base64;
 
 import static com.mgtechno.shared.SharedConstants.*;
 
 public class JwtValidateFilter extends GenericFilterBean {
+    private KeyPair keyPair;
 
+    public JwtValidateFilter(String keyStorePath, String password, String alias){
+        this.keyPair = new KeyStoreKeyFactory(new ClassPathResource(keyStorePath), password.toCharArray()).getKeyPair(alias);
+    }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
@@ -40,17 +50,19 @@ public class JwtValidateFilter extends GenericFilterBean {
     }
 
     private boolean isTokenVerified(String token){
-        boolean verified = false;
-        String[] parts = token.split("\\.");
+        String[] parts = token.split(PERIOD_REGEX);
+        RsaSigner signer = new RsaSigner((RSAPrivateKey)this.keyPair.getPrivate());
+        String encodedToken = JwtHelper.encode(decode(parts[1]), signer).getEncoded();
+        boolean verified = parts[2].equals(encodedToken.split(PERIOD_REGEX)[2]);
         return verified;
     }
 
     private boolean isTokenExpired(String token){
         boolean expired = false;
-        String decodedStr = decode(token);
-        String[] parts = token.split("\\.");
+        String[] parts = token.split(PERIOD_REGEX);
         JSONObject payload = new JSONObject(decode(parts[1]));
-        return payload.getLong("exp") > (System.currentTimeMillis() / 1000);
+        expired = payload.getLong("exp") < (System.currentTimeMillis() / 1000);
+        return expired;
     }
 
     private String getAuthorizeHeader(String authorization, String clientId, String secret) {
