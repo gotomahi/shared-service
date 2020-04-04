@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -21,17 +22,24 @@ import java.util.Map;
 public class RestService {
     private static final Logger LOG = LoggerFactory.getLogger(RestService.class);
 
-    public Map invokePostService(String url, Map<String, String> paramValues, Map<String, String> headerValues)throws IOException{
+    public Map post(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         return getBody(response);
     }
 
-    public Map invokeGetService(String url, Map<String, String> paramValues, Map<String, String> headerValues)throws IOException{
+    public Map get(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        return getBody(response);
+    }
+
+    public Map put(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
         return getBody(response);
     }
 
@@ -45,22 +53,26 @@ public class RestService {
         return result;
     }
 
-    private MultiValueMap<String, String> getServiceParams(Map<String, String> paramValues){
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        for(String param: paramValues.keySet()){
-            List<String> paramValueList = new ArrayList<>();
-            paramValueList.add(paramValues.get(param));
-            params.put(param, paramValueList);
+    private MultiValueMap<String, Object> getServiceParams(Map<String, Object> paramValues){
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        if(!CollectionUtils.isEmpty(paramValues)) {
+            for (String param : paramValues.keySet()) {
+                List paramValueList = new ArrayList<>();
+                paramValueList.add(paramValues.get(param));
+                params.put(param, paramValueList);
+            }
         }
         return params;
     }
 
     private HttpHeaders getServiceHeaders(Map<String, String> headerValues){
         HttpHeaders headers = new HttpHeaders();
-        for(String header: headerValues.keySet()){
-            List<String> headerValueList = new ArrayList<>();
-            headerValueList.add(headerValues.get(header));
-            headers.put(header, headerValueList);
+        if(!CollectionUtils.isEmpty(headerValues)) {
+            for (String header : headerValues.keySet()) {
+                List<String> headerValueList = new ArrayList<>();
+                headerValueList.add(headerValues.get(header));
+                headers.put(header, headerValueList);
+            }
         }
         return headers;
     }

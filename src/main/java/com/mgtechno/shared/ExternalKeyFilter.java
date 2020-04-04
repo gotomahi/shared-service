@@ -27,7 +27,7 @@ public class ExternalKeyFilter extends GenericFilterBean {
         if (StringUtils.isEmpty(request.getHeader(HEADER_AUTHORIZATION)) && !StringUtils.isEmpty(exkey)) {
             Map<String, String> headers = new HashMap<>();
             headers.put(HEADER_AUTHORIZATION, "Bearer " + exkey);
-            restService.invokeGetService("http://localhost:8080" + request.getRequestURI(), null, headers);
+            restService.get("http://localhost:8080" + request.getRequestURI(), null, headers);
         } else {
             filterChain.doFilter(servletRequest, servletResponse);
         }
