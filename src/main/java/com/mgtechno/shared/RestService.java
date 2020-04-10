@@ -1,6 +1,5 @@
 package com.mgtechno.shared;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -9,12 +8,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,40 +20,47 @@ import java.util.Map;
 public class RestService {
     private static final Logger LOG = LoggerFactory.getLogger(RestService.class);
 
-    public Map post(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
+    /**
+     * This method takes query parameters and headers
+     *
+     * @param url
+     * @param paramValues
+     * @param headerValues
+     * @param <T>
+     * @return
+     * @throws IOException
+     */
+    public <T> ResponseEntity<T> post(String url, Map<String, Object> paramValues, Map<String, String> headerValues, Class<T> responseType) throws IOException {
+
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-        return getBody(response);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
+        ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        return response;
     }
 
-    public Map get(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-        return getBody(response);
-    }
-
-    public Map put(String url, Map<String, Object> paramValues, Map<String, String> headerValues)throws IOException{
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-        return getBody(response);
-    }
-
-    private Map getBody(ResponseEntity<String> response)throws IOException {
-        Map result = null;
-        if(response.getStatusCodeValue() == 200 && response.getBody() != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            LOG.info("Response body is "+ response.getBody());
-            result = mapper.readValue(response.getBody(), Map.class);
+    public <T> ResponseEntity<T> get(String url, Map<String, Object> queryParams, Map<String, String> headerValues, Class<T> responseType) throws IOException {
+        StringBuilder urlStr = new StringBuilder(url);
+        if (!CollectionUtils.isEmpty(queryParams)) {
+            queryParams.forEach((k, v) -> {
+                urlStr.append(urlStr.indexOf("?") == -1 ? "?" : "&").append(k).append("=").append(v);
+            });
         }
-        return result;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(null, getServiceHeaders(headerValues));
+        ResponseEntity<T> response = restTemplate.exchange(urlStr.toString(), HttpMethod.GET, entity, responseType);
+        return response;
     }
 
-    private MultiValueMap<String, Object> getServiceParams(Map<String, Object> paramValues){
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        if(!CollectionUtils.isEmpty(paramValues)) {
+    public <T> ResponseEntity<T> put(String url, Map<String, Object> paramValues, Map<String, String> headerValues, Class<T> responseType) throws IOException {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(getServiceParams(paramValues), getServiceHeaders(headerValues));
+        ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
+        return response;
+    }
+
+    private Map<String, Object> getServiceParams(Map<String, Object> paramValues) {
+        Map<String, Object> params = new HashMap<>();
+        if (!CollectionUtils.isEmpty(paramValues)) {
             for (String param : paramValues.keySet()) {
                 List paramValueList = new ArrayList<>();
                 paramValueList.add(paramValues.get(param));
@@ -65,9 +70,9 @@ public class RestService {
         return params;
     }
 
-    private HttpHeaders getServiceHeaders(Map<String, String> headerValues){
+    private HttpHeaders getServiceHeaders(Map<String, String> headerValues) {
         HttpHeaders headers = new HttpHeaders();
-        if(!CollectionUtils.isEmpty(headerValues)) {
+        if (!CollectionUtils.isEmpty(headerValues)) {
             for (String header : headerValues.keySet()) {
                 List<String> headerValueList = new ArrayList<>();
                 headerValueList.add(headerValues.get(header));
