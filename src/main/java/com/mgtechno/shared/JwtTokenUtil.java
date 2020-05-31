@@ -47,7 +47,7 @@ public class JwtTokenUtil {
         return payload;
     }
 
-    public Long getUserId(String authHeader){
+    public static Long getUserId(String authHeader){
         return getTokenPayload(authHeader).getLong("userId");
     }
 }
