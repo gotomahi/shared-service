@@ -8,6 +8,4 @@ public interface SharedConstants {
     String COLON = ":";
     String PERIOD = ".";
     String PERIOD_REGEX = "\\.";
-    String HEADER_AUTHORIZATION = "Authorization";
-    String PARAM_EXKEY = "exkey";
 }
