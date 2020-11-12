@@ -4,33 +4,29 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import static com.mgtechno.shared.rest.RestConstant.*;
 
 public class ConnectionManager {
-    private Properties dbProps = new Properties();
-    private List<Connection> connectionPool;
-    private List<Connection> usedConnections;
-    private static ConnectionManager conManager;
-    public synchronized static ConnectionManager getInstance() throws IOException, SQLException {
-        if (conManager == null) {
-            conManager = new ConnectionManager();
-        }
-        return conManager;
-    }
+    private Properties dbProps;
+    private List<Connection> connectionPool = new ArrayList<>();
+    private List<Connection> usedConnections = new ArrayList<>();
 
-    private ConnectionManager() throws SQLException, IOException {
-        dbProps.load(ConnectionManager.class.getClassLoader().getResourceAsStream(FILE_DB_PROPERTIES));
-        for(int i = 0; i < (Integer)dbProps.get(DB_MIN_POOL); i++){
+    public ConnectionManager(Properties dbProps) throws SQLException, IOException {
+        this.dbProps =dbProps;
+        int minPool = Integer.parseInt(dbProps.get(DB_MIN_POOL).toString());
+        for(int i = 0; i < minPool ; i++){
             connectionPool.add(createConnection());
         }
     }
 
     public Connection getConnection() throws SQLException {
         int conSize = getConnectionSize();
-        if(connectionPool.isEmpty() &&  conSize < (Integer)dbProps.get(DB_MAX_POOL)){
+        int maxPool = Integer.parseInt(dbProps.get(DB_MAX_POOL).toString());
+        if(connectionPool.isEmpty() &&  conSize < maxPool){
             connectionPool.add(createConnection());
         }
         Connection con = connectionPool.remove(0);

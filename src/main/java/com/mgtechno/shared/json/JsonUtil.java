@@ -37,13 +37,11 @@ public class JsonUtil {
             if(data.get(key) instanceof Integer) {
                 jsonBuilder.add(key, (Integer) data.get(key));
             }else if(data.get(key) instanceof Long){
-                jsonBuilder.add(key, (Integer) data.get(key));
+                jsonBuilder.add(key, (Long) data.get(key));
             }else if(data.get(key) instanceof String){
                 jsonBuilder.add(key, (String) data.get(key));
             }else if(data.get(key) instanceof BigDecimal){
                 jsonBuilder.add(key, (BigDecimal) data.get(key));
-            }else if(data.get(key) instanceof Long){
-                jsonBuilder.add(key, (Long) data.get(key));
             }else if(data.get(key) instanceof Map){
                 jsonBuilder.add(key, createJsonObject((Map)data.get(key)));
             }else if(data.get(key) instanceof List){

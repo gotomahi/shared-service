@@ -11,6 +11,7 @@ public interface RestConstant {
     String QUESTION_MARK = "?";
     String REGEX_QUESTION_MARK = "\\?";
     String EMPTY_STRING = "";
+    String SINGLE_SPACE = " ";
     String EQUALS = "=";
     String AMPERSAND = "&";
     String FILE_DB_PROPERTIES = "db.properties";
