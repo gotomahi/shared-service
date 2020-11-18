@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -20,12 +21,23 @@ import static com.mgtechno.shared.rest.RestConstant.*;
  */
 public class RequestHandler implements HttpHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class.getCanonicalName());
-    private Map<String, Route> routes;
+    private Map<String, PathInfo> pathMap;
 
     public RequestHandler(Route... routes){
-        this.routes = new HashMap<>();
-        for(Route route: routes) {
-            this.routes.put(route.path(), route);
+        this.pathMap = new HashMap<>();
+        Path rootPath = routes.getClass().getAnnotation(Path.class);
+        for (Route route : routes){
+            for (Method method : route.getClass().getDeclaredMethods()) {
+                Path path = method.getAnnotation(Path.class);
+                if (path != null) {
+                    StringBuilder uri = new StringBuilder();
+                    if(rootPath != null){
+                        uri.append(rootPath.value());
+                    }
+                    uri.append(path.value());
+                    pathMap.put(uri.toString(), new PathInfo(path.value(), path.method(), route, method));
+                }
+            }
         }
     }
 
@@ -35,9 +47,9 @@ public class RequestHandler implements HttpHandler {
         String uriPath = exchange.getRequestURI().getPath();
         OutputStream outputStream = exchange.getResponseBody();
         try {
-            Route route = routes.keySet().stream().filter(path -> isPathMatched(uriPath, path))
-                    .map(path -> routes.get(path)).findFirst().get();
-            response = route.process(exchange);
+            PathInfo pathInfo = pathMap.keySet().stream().filter(path -> isPathMatched(uriPath, path))
+                    .map(path -> pathMap.get(path)).findFirst().get();
+            response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange);
             sendResponse(exchange, outputStream, response);
         }catch (Exception e){
             sendResponse(exchange, outputStream, new Response(SERVER_ERROR.code(), new HashMap(), e.getMessage()));

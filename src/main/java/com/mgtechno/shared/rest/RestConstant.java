@@ -20,4 +20,17 @@ public interface RestConstant {
     String DB_URL = "db.url";
     String DB_USER = "db.user";
     String DB_PASSWORD = "db.password";
+    String BASIC = "Basic";
+    String BEARER = "Bearer";
+    String TAB_SPACE = " ";
+    String COLON = ":";
+    String PERIOD = ".";
+    String PERIOD_REGEX = "\\.";
+    String SECRET_KEY = "FREE_MASON"; //@TODO Add Signature here
+    char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    String ISSUER = "mgtechno.co.uk";
+    String JWT_HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
+    String HEADER_AUTHORIZATION = "Authorization";
+    String ACCESS_TOKEN = "access_token";
+    String REFRESH_TOKEN = "refresh_token";
 }

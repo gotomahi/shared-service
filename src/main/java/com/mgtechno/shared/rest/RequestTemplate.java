@@ -10,7 +10,6 @@ import java.net.http.HttpResponse;
 import java.util.Map;
 
 import static com.mgtechno.shared.rest.RestConstant.*;
-import static com.mgtechno.shared.rest.RestConstants.HEADER_AUTHORIZATION;
 
 public class RequestTemplate {
     public HttpResponse makeRequest(String url, String requestMethod, String body, Map<String, String> headers, Map<String, String> params) throws IOException {

@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.mgtechno.shared.rest.RestConstant.*;
-import static com.mgtechno.shared.rest.RestConstants.*;
 
 public class JWTToken {
     private static final Logger LOG = Logger.getLogger(JWTToken.class.getCanonicalName());

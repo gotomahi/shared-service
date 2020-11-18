@@ -11,9 +11,6 @@ import java.util.Set;
 import static com.mgtechno.shared.rest.RestConstant.*;
 
 public interface Route {
-    String path();
-    String requestMethod();
-    Response process(HttpExchange exchange) throws IOException;
 
     default Map<String, String> requestParams(HttpExchange exchange){
         Map<String, String> params = new HashMap<>();
