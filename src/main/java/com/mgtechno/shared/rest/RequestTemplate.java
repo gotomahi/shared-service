@@ -12,7 +12,7 @@ import java.util.Map;
 import static com.mgtechno.shared.rest.RestConstant.*;
 
 public class RequestTemplate {
-    public HttpResponse makeRequest(String url, String requestMethod, String body, Map<String, String> headers, Map<String, String> params) throws IOException {
+    public HttpResponse makeRequest(String url, String requestMethod, String body, Map<String, String> headers, Map<String, Object> params) throws IOException {
         StringBuilder urlBuilder = new StringBuilder(url);
         urlBuilder.append(CollectionUtil.isNotEmpty(params) ? QUESTION_MARK : EMPTY_STRING);
         params.forEach((k, v) -> urlBuilder.append(k).append(EQUALS).append(v));

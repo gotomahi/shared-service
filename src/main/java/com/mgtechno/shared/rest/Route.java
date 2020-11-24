@@ -1,5 +1,6 @@
 package com.mgtechno.shared.rest;
 
+import com.mgtechno.shared.json.JsonUtil;
 import com.mgtechno.shared.util.StringUtil;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -14,12 +15,14 @@ public interface Route {
 
     default Map<String, String> requestParams(HttpExchange exchange){
         Map<String, String> params = new HashMap<>();
-        String queryString = exchange.getRequestURI().toString().split(REGEX_QUESTION_MARK)[1];
-        if(!StringUtil.isEmpty(queryString)){
-            String[] queryParams = queryString.split(AMPERSAND);
-            for(String queryParam: queryParams){
-                String[] parts = queryParam.split(EQUALS);
-                params.put(parts[0], parts[1]);
+        String[] uriParts = exchange.getRequestURI().toString().split(REGEX_QUESTION_MARK, -1);
+        if(uriParts.length > 1) {
+            if (!StringUtil.isEmpty(uriParts[1])) {
+                String[] queryParams = uriParts[1].split(AMPERSAND);
+                for (String queryParam : queryParams) {
+                    String[] parts = queryParam.split(EQUALS);
+                    params.put(parts[0], parts[1]);
+                }
             }
         }
         return params;
@@ -39,5 +42,20 @@ public interface Route {
         exchange.getRequestBody().read(data);
         String body = new String(data, CHARSET_UTF8);
         return body;
+    }
+
+    default Long getCustomerId(HttpExchange exchange){
+        return Long.parseLong(getAuthPayloadProperty(exchange, "customerId").toString());
+    }
+
+    default Long getUserId(HttpExchange exchange){
+        return Long.parseLong(getAuthPayloadProperty(exchange, "userId").toString());
+    }
+
+    default Object getAuthPayloadProperty(HttpExchange exchange, String property){
+        JWTToken jwtToken = new JWTToken();
+        Map<String, String> headers = headers(exchange);
+        String authPayload = jwtToken.decodePayload(headers.get(HEADER_AUTHORIZATION));
+        return JsonUtil.getPropertyValue(authPayload, property);
     }
 }

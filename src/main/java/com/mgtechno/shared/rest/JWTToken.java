@@ -46,16 +46,21 @@ public class JWTToken {
         }
     }
 
-    private static String encode(String obj) {
+    private String encode(String obj) {
         return encode(obj.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String encode(byte[] bytes) {
+    private String encode(byte[] bytes) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    private static String decode(String encodedString) {
+    private String decode(String encodedString) {
         return new String(Base64.getUrlDecoder().decode(encodedString));
+    }
+
+    public String decodePayload(String token){
+        String[] parts = token.split(REGEX_DOT);
+        return decode(parts[1]);
     }
 
     /**

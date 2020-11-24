@@ -12,7 +12,7 @@ public class Response {
 
     }
 
-    public Response(int statusCode, Map<String, List<String>> headers, String body) {
+    public Response(int statusCode, Map<String, List<String>> headers, Object body) {
         this.statusCode = statusCode;
         this.headers = headers;
         this.body = body;
