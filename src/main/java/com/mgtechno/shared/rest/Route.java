@@ -58,4 +58,7 @@ public interface Route {
         String authPayload = jwtToken.decodePayload(headers.get(HEADER_AUTHORIZATION));
         return JsonUtil.getPropertyValue(authPayload, property);
     }
+    default Response response(Object object){
+        return new Response(HttpStatus.SUCCESS.code(), HeaderType.addHeader(null, HeaderType.JSON_CONTENT), object);
+    }
 }

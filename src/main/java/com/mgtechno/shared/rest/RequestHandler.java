@@ -56,16 +56,14 @@ public class RequestHandler implements HttpHandler {
                     .filter(path -> exchange.getRequestMethod().equalsIgnoreCase(path.getRequestMethod().method())
                                 && (FORWARD_SLASH.equals(path.getPath()) || isPathMatched(uriPath, path.getPath(), pathVarMap)))
                     .findFirst().orElse(null);
-            Object responseData = null;
             if(pathInfo == null){
-                responseData = "No resource found";
+                response = new Response(HttpStatus.NOT_FOUND.code(),
+                        HeaderType.addHeader(null, HeaderType.JSON_CONTENT), "No resource found");
             }else if(pathInfo.getMethod().getParameterCount() == 1) {
-                responseData = pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange);
+                response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange);
             }else if(pathInfo.getMethod().getParameterCount() == 2){
-                responseData = pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange, pathVarMap);
+                response = (Response)pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange, pathVarMap);
             }
-            response = new Response(HttpStatus.SUCCESS.code(),
-                    HeaderType.addHeader(null, HeaderType.JSON_CONTENT), responseData);
             sendResponse(exchange, outputStream, response);
         }catch (Exception e){
             sendResponse(exchange, outputStream, new Response(SERVER_ERROR.code(), new HashMap(), e.getMessage()));
