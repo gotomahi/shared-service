@@ -33,4 +33,7 @@ public interface RestConstant {
     String HEADER_AUTHORIZATION = "Authorization";
     String ACCESS_TOKEN = "access_token";
     String REFRESH_TOKEN = "refresh_token";
+    String GRANT_TYPE = "grant_type";
+    String AUTHORIZATION_CODE = "authorization_code";
+    String PASSWORD = "password";
 }

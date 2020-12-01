@@ -53,12 +53,15 @@ public class RequestHandler implements HttpHandler {
         try {
             Map<String, String> pathVarMap = new HashMap<>();
             PathInfo pathInfo = paths.stream()
-                    .filter(path -> exchange.getRequestMethod().equalsIgnoreCase(path.getRequestMethod().method())
+                    .filter(path -> ((exchange.getRequestMethod().equalsIgnoreCase(path.getRequestMethod().method())
+                                    || exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.OPTIONS.method())))
                                 && (FORWARD_SLASH.equals(path.getPath()) || isPathMatched(uriPath, path.getPath(), pathVarMap)))
                     .findFirst().orElse(null);
             if(pathInfo == null){
                 response = new Response(HttpStatus.NOT_FOUND.code(),
                         HeaderType.addHeader(null, HeaderType.JSON_CONTENT), "No resource found");
+            }else if(exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.OPTIONS.method())) {
+                response = new Response(HttpStatus.SUCCESS.code(), corsHeaders(), "response is success");
             }else if(pathInfo.getMethod().getParameterCount() == 1) {
                 response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange);
             }else if(pathInfo.getMethod().getParameterCount() == 2){
@@ -77,7 +80,7 @@ public class RequestHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, OutputStream outputStream, Response response) throws IOException{
         if(CollectionUtil.isNotEmpty(response.getHeaders())) {
-            exchange.getResponseHeaders().putAll(response.getHeaders());
+            exchange.getResponseHeaders().putAll(corsHeaders());
         }
 
         String body = EMPTY_STRING;
@@ -86,6 +89,7 @@ public class RequestHandler implements HttpHandler {
         }else if(response.getBody() != null){
             body = jsonMapper.toJson(response.getBody());
         }
+
         byte[] responseBody = body.getBytes(CHARSET_UTF8);
 
         exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);
@@ -117,5 +121,24 @@ public class RequestHandler implements HttpHandler {
             pathVarMap.putAll(pathVariableMap);
         }
         return matched;
+    }
+
+    private Map<String, List<String>> corsHeaders(){
+        Map<String, List<String>> respHeaders = new HashMap<>();
+        List<String> acAllowOrigin = new ArrayList<>();
+        acAllowOrigin.add("*");
+        respHeaders.put("Access-Control-Allow-Origin", acAllowOrigin);
+        List<String> acAllowMethods = new ArrayList<>();
+        acAllowMethods.add("GET");
+        acAllowMethods.add("POST");
+        acAllowMethods.add("PUT");
+        acAllowMethods.add("DELETE");
+        acAllowMethods.add("OPTIONS");
+        respHeaders.put("Access-Control-Allow-Methods", acAllowMethods);
+        List<String> acAllowHeaders = new ArrayList<>();
+        acAllowHeaders.add("Content-Type");
+        acAllowHeaders.add("Authorization");
+        respHeaders.put("Access-Control-Allow-Headers", acAllowHeaders);
+        return respHeaders;
     }
 }

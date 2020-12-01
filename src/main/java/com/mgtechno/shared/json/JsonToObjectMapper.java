@@ -68,7 +68,7 @@ public class JsonToObjectMapper {
         return object;
     }
 
-    private JsonObject getJsonObject(String str){
+    public JsonObject getJsonObject(String str){
         JsonObject jsonObject = null;
         if(!StringUtil.isEmpty(str)) {
             JsonReader jsonString = Json.createReader(new StringReader(str));
