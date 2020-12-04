@@ -68,6 +68,8 @@ public class ObjectToJsonMapper {
             objBuilder.add(name, (String) value);
         }else if(value instanceof BigDecimal){
             objBuilder.add(name, (BigDecimal) value);
+        }else if(value instanceof Boolean){
+            objBuilder.add(name, (Boolean) value);
         }
     }
 

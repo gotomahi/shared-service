@@ -26,4 +26,23 @@ public enum HeaderType {
         headers.put(header.headerType(), header.headerValues());
         return headers;
     }
+
+    public static Map<String, List<String>> corsHeaders(){
+        Map<String, List<String>> respHeaders = new HashMap<>();
+        List<String> acAllowOrigin = new ArrayList<>();
+        acAllowOrigin.add("*");
+        respHeaders.put("Access-Control-Allow-Origin", acAllowOrigin);
+        List<String> acAllowMethods = new ArrayList<>();
+        acAllowMethods.add("GET");
+        acAllowMethods.add("POST");
+        acAllowMethods.add("PUT");
+        acAllowMethods.add("DELETE");
+        acAllowMethods.add("OPTIONS");
+        respHeaders.put("Access-Control-Allow-Methods", acAllowMethods);
+        List<String> acAllowHeaders = new ArrayList<>();
+        acAllowHeaders.add("Content-Type");
+        acAllowHeaders.add("Authorization");
+        respHeaders.put("Access-Control-Allow-Headers", acAllowHeaders);
+        return respHeaders;
+    }
 }
