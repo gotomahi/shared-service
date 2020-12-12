@@ -8,7 +8,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,26 +22,12 @@ import static com.mgtechno.shared.rest.RestConstant.*;
  */
 public class RequestHandler implements HttpHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class.getCanonicalName());
-    private List<PathInfo> paths;
+    private List<RestMethod> paths;
     private ObjectToJsonMapper jsonMapper;
 
     public RequestHandler(String contextPath, Route... routes){
         this.jsonMapper = new ObjectToJsonMapper();
-        this.paths = new ArrayList<>();
-        for (Route route : routes){
-            Path rootPath = route.getClass().getAnnotation(Path.class);
-            for (Method method : route.getClass().getDeclaredMethods()) {
-                Path path = method.getAnnotation(Path.class);
-                if (path != null) {
-                    StringBuilder uri = new StringBuilder(contextPath);
-                    if(rootPath != null){
-                        uri.append(rootPath.value());
-                    }
-                    uri.append(path.value());
-                    paths.add(new PathInfo(uri.toString(), path.method(), route, method));
-                }
-            }
-        }
+        this.paths = RestMethodHelper.prepareRestMethods(contextPath, routes);
     }
 
     @Override
@@ -52,28 +37,24 @@ public class RequestHandler implements HttpHandler {
         OutputStream outputStream = exchange.getResponseBody();
         try {
             List<KeyValue> pathVars = new ArrayList<>();
-            PathInfo pathInfo = paths.stream()
-                    .filter(path -> ((exchange.getRequestMethod().equalsIgnoreCase(path.getRequestMethod().method())
-                                    || exchange.getRequestMethod().equalsIgnoreCase(HttpMethod.OPTIONS.method())))
-                                && (FORWARD_SLASH.equals(path.getPath()) || isPathMatched(uriPath, path.getPath(), pathVars)))
-                    .findFirst().orElse(null);
-            if(pathInfo == null){
+            RestMethod restMethod = RestMethodHelper.findMatchedPath(paths, exchange, pathVars);
+            if(restMethod == null){
                 response = new Response(HttpStatus.NOT_FOUND.code(),
                         HeaderType.addHeader(null, HeaderType.JSON_CONTENT), "No resource found");
             }else if(pathVars.isEmpty()) {
-                response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange);
+                response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange);
             }else {
                 Object[] params = new Object[pathVars.size()];
                 int i = 0;
                 for(KeyValue keyValue : pathVars){
                     params[i] = keyValue.getValue();
                 }
-                if(pathInfo.getMethod().getParameterCount() == 2) {
-                    response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange, params[0]);
-                }else if(pathInfo.getMethod().getParameterCount() == 3) {
-                    response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange, params[0], params[1]);
-                }else if(pathInfo.getMethod().getParameterCount() == 4) {
-                    response = (Response) pathInfo.getMethod().invoke(pathInfo.getRoute(), exchange, params[0], params[1], params[2]);
+                if(restMethod.getMethod().getParameterCount() == 2) {
+                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0]);
+                }else if(restMethod.getMethod().getParameterCount() == 3) {
+                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0], params[1]);
+                }else if(restMethod.getMethod().getParameterCount() == 4) {
+                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0], params[1], params[2]);
                 }
             }
             sendResponse(exchange, outputStream, response);
@@ -104,31 +85,5 @@ public class RequestHandler implements HttpHandler {
         exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);
         outputStream.write(responseBody);
         outputStream.flush();
-    }
-
-    private boolean isPathMatched(String uriPath, String resourcePath, List<KeyValue> pathVars){
-        String[] uriPaths = uriPath.split(FORWARD_SLASH, -1);
-        String[] resourcePaths = resourcePath.split(FORWARD_SLASH, -1);
-        boolean matched = false;
-        if(resourcePaths.length > 0 && resourcePaths.length <= uriPaths.length){
-            matched = true;
-            for(int i = 1; i < resourcePaths.length; i++){
-                if(resourcePaths[i].equals(uriPaths[i])){
-                    continue;
-                }else if(resourcePaths[i].startsWith(LEFT_BRACE) && resourcePaths[i].endsWith(RIGHT_BRACE)){
-                    String pathVariable = resourcePaths[i].substring(1, resourcePaths[i].length() - 1);
-                    pathVars.add(new KeyValue(pathVariable, uriPaths[i]));
-                    continue;
-                }else{
-                    matched = false;
-                    break;
-                }
-            }
-        }
-        if(!matched){
-            //clear wrong matched path variables
-            pathVars.clear();
-        }
-        return matched;
     }
 }

@@ -36,4 +36,13 @@ public interface RestConstant {
     String GRANT_TYPE = "grant_type";
     String AUTHORIZATION_CODE = "authorization_code";
     String PASSWORD = "password";
+    String TOKEN_EXPIRATION = "exp";
+    String TOKEN_CUSTOMER_ID = "customerId";
+    String TOKEN_APPLICATION = "application";
+    String TOKEN_USER_ID = "userId";
+    String TOKEN_USER_NAME = "user_name";
+    String TOKEN_AUTHORITIES = "authorities";
+    String TOKEN_ACCESS_TOKEN = "access_token";
+    String TOKEN_TYPE = "token_type";
+    String TOKEN_REFRESH_TOKEN = "refresh_token";
 }

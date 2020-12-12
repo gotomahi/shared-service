@@ -12,6 +12,9 @@ import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static com.mgtechno.shared.rest.RestConstant.EMPTY_STRING;
+import static com.mgtechno.shared.rest.RestConstant.FORWARD_SLASH;
+
 public class Application {
     public static Properties props;
     public static ConnectionManager conManager;
@@ -33,7 +36,7 @@ public class Application {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
                 getIntegerProperty("server.threadpool.maxThreads"));
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        RequestHandler requestHandler = new RequestHandler(contextPath, routes);
+        RequestHandler requestHandler = new RequestHandler(FORWARD_SLASH.equals(contextPath) ? EMPTY_STRING : contextPath, routes);
         server.createContext(contextPath, requestHandler);
         server.setExecutor(threadPoolExecutor);
         server.start();

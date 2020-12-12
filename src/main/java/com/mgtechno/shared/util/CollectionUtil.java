@@ -8,6 +8,10 @@ public class CollectionUtil {
         return collection != null && collection.size() > 0;
     }
 
+    public static boolean isEmpty(Collection collection){
+        return collection == null || collection.size() == 0;
+    }
+
     public static boolean isNotEmpty(Map map){
         return map != null && map.size() > 0;
     }

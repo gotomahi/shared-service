@@ -1,11 +1,14 @@
 package com.mgtechno.shared.rest;
 
+import com.mgtechno.shared.json.JsonToObjectMapper;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,8 +16,10 @@ import static com.mgtechno.shared.rest.RestConstant.*;
 
 public class JWTToken {
     private static final Logger LOG = Logger.getLogger(JWTToken.class.getCanonicalName());
+    private JsonToObjectMapper objectMapper;
 
     public JWTToken() {
+        objectMapper = new JsonToObjectMapper();
     }
 
     public String createToken(String payload) {
@@ -38,6 +43,11 @@ public class JWTToken {
         String payload = decode(parts[1]);
         if (payload.isEmpty()) {
             throw new Exception("Payload is Empty: ");
+        }
+        Map<String, Object> tokenData = objectMapper.convertToMap(payload);
+        long exp = (Long)tokenData.get(TOKEN_EXPIRATION);
+        if(System.currentTimeMillis() > exp){
+            throw new Exception("Token is expired");
         }
         String signature = parts[2];
         boolean valid = signature.equals(hmacSha256(encodedHeader + "." + encode(payload), SECRET_KEY));
