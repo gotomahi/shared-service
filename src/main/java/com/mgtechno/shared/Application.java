@@ -1,13 +1,13 @@
 package com.mgtechno.shared;
 
-import com.mgtechno.shared.jdbc.ConnectionManager;
 import com.mgtechno.shared.rest.RequestHandler;
 import com.mgtechno.shared.rest.Route;
 import com.sun.net.httpserver.HttpServer;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,17 +17,12 @@ import static com.mgtechno.shared.rest.RestConstant.FORWARD_SLASH;
 
 public class Application {
     public static Properties props;
-    public static ConnectionManager conManager;
+    public DataSource dataSource;
+    public static Application application;
 
     protected static void loadConfig(String env) throws IOException {
         props = new Properties();
         props.load(Application.class.getClassLoader().getResourceAsStream( env + "/application.properties"));
-    }
-
-    protected static void initDBConManager(String env) throws IOException, SQLException {
-        Properties dbProps = new Properties();
-        dbProps.load(Application.class.getClassLoader().getResourceAsStream( env + "/db.properties"));
-        conManager = new ConnectionManager(dbProps);
     }
 
     protected static void initServer(Route... routes) throws IOException {
@@ -53,4 +48,47 @@ public class Application {
     public static boolean getBooleanProperty(String property){
         return Boolean.parseBoolean(props.getProperty(property));
     }
+
+    public static Connection getConnection()throws SQLException{
+        return application.dataSource.getConnection();
+    }
+
+    public static void close(Connection con, PreparedStatement ps, ResultSet rs){
+        application.closeCon(con, ps, rs);
+    }
+
+    public static void close(Connection con, CallableStatement cs, ResultSet rs){
+        application.closeCon(con, cs, rs);
+    }
+
+    private void closeCon(Connection con, PreparedStatement ps, ResultSet rs){
+        try{
+            if(con != null){
+                con.close();
+            }
+            if(ps != null){
+                ps.close();
+            }
+            if(rs != null){
+                rs.close();
+            }
+        }catch(Exception e){
+        }
+    }
+
+    private void closeCon(Connection con, CallableStatement cs, ResultSet rs){
+        try{
+            if(con != null){
+                con.close();
+            }
+            if(cs != null){
+                cs.close();
+            }
+            if(rs != null){
+                rs.close();
+            }
+        }catch(Exception e){
+        }
+    }
+
 }

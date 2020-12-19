@@ -70,7 +70,7 @@ public class RequestHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, OutputStream outputStream, Response response) throws IOException{
         if(CollectionUtil.isNotEmpty(response.getHeaders())) {
-            exchange.getResponseHeaders().putAll(HeaderType.corsHeaders());
+            exchange.getResponseHeaders().putAll(response.getHeaders());
         }
 
         String body = EMPTY_STRING;

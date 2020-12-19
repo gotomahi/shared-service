@@ -42,7 +42,13 @@ public enum HeaderType {
         List<String> acAllowHeaders = new ArrayList<>();
         acAllowHeaders.add("Content-Type");
         acAllowHeaders.add("Authorization");
+        acAllowHeaders.add("Host");
+        acAllowHeaders.add("Referer");
         respHeaders.put("Access-Control-Allow-Headers", acAllowHeaders);
+        List<String> hosts = new ArrayList<>();
+        hosts.add("*");
+        respHeaders.put("Host", hosts);
+        respHeaders.put("Referer", hosts);
         return respHeaders;
     }
 }

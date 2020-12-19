@@ -44,10 +44,9 @@ public class RestMethodHelper {
         String requestMethod = exchange.getRequestMethod();
         String uriPath = StringUtil.trimLastChar(exchange.getRequestURI().getPath(), FORWARD_SLASH);
         String authHeader = exchange.getRequestHeaders().getFirst(HEADER_AUTHORIZATION);
-        RestMethod restMethod = paths.stream().filter(path -> (
-                        (requestMethod.equalsIgnoreCase(path.getRequestMethod().method())
-                                || requestMethod.equalsIgnoreCase(HttpMethod.OPTIONS.method())))
-                        && isMethodAllowed(path, authHeader) && (FORWARD_SLASH.equals(path.getPath())
+        RestMethod restMethod = paths.stream().filter(path ->
+                        requestMethod.equalsIgnoreCase(path.getRequestMethod().method())
+                        && isMethodAllowed(path, authHeader) && (EMPTY_STRING.equals(path.getPath())
                                 || isPathMatched(uriPath, path.getPath(), pathVars, authHeader)))
                 .findFirst().orElse(null);
         return restMethod;
@@ -71,21 +70,22 @@ public class RestMethodHelper {
     private static boolean isPathMatched(String uriPath, String resourcePath, List<KeyValue> pathVars, String authHeader){
         String[] uriPaths = uriPath.split(FORWARD_SLASH, -1);
         String[] resourcePaths = resourcePath.split(FORWARD_SLASH, -1);
-        boolean matched = false;
-        if(resourcePaths.length > 0 && resourcePaths.length <= uriPaths.length){
-            matched = true;
-            for(int i = 1; i < resourcePaths.length; i++){
-                if(resourcePaths[i].equals(uriPaths[i])){
-                    continue;
-                }else if(resourcePaths[i].startsWith(LEFT_BRACE) && resourcePaths[i].endsWith(RIGHT_BRACE)){
-                    String pathVariable = resourcePaths[i].substring(1, resourcePaths[i].length() - 1);
-                    pathVars.add(new KeyValue(pathVariable, uriPaths[i]));
-                    continue;
-                }else{
-                    matched = false;
-                    break;
-                }
+        boolean matched = true;
+        for(int i = 1; i < resourcePaths.length; i++){
+            if(resourcePaths[i].equals(uriPaths[i])){
+                continue;
+            }else if(resourcePaths[i].startsWith(LEFT_BRACE) && resourcePaths[i].endsWith(RIGHT_BRACE)){
+                String pathVariable = resourcePaths[i].substring(1, resourcePaths[i].length() - 1);
+                pathVars.add(new KeyValue(pathVariable, uriPaths[i]));
+                continue;
+            }else{
+                matched = false;
+                break;
             }
+        }
+        //check partial match case and set it to unmatch
+        if(matched && resourcePaths.length < uriPaths.length) {
+            matched = false;
         }
         if(!matched){
             //clear wrong matched path variables
