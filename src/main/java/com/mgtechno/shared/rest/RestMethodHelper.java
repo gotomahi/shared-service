@@ -1,7 +1,8 @@
 package com.mgtechno.shared.rest;
 
+import com.google.gson.reflect.TypeToken;
 import com.mgtechno.shared.KeyValue;
-import com.mgtechno.shared.json.JsonToObjectMapper;
+import com.mgtechno.shared.json.JSON;
 import com.mgtechno.shared.util.CollectionUtil;
 import com.mgtechno.shared.util.StringUtil;
 import com.sun.net.httpserver.HttpExchange;
@@ -55,9 +56,8 @@ public class RestMethodHelper {
     private static boolean isMethodAllowed(RestMethod restMethod, String authHeader){
         boolean allowed = true;
         if(authHeader != null && authHeader.startsWith(BEARER)) {
-            JWTToken jwtToken = new JWTToken();
-            JsonToObjectMapper jsonToObjectMapper = new JsonToObjectMapper();
-            Map<String, Object> tokenMap = jsonToObjectMapper.convertToMap(jwtToken.decodePayload(authHeader.split(SINGLE_SPACE)[1]));
+            String token = JWTToken.getJwtToken().decodePayload(authHeader.split(SINGLE_SPACE)[1]);
+            Map<String, Object> tokenMap = JSON.getJson().fromJson(token, new TypeToken<Map<String, Object>>(){}.getType());
             List<String> userRoles = (List<String>)tokenMap.get("authorities");
             allowed = CollectionUtil.isEmpty(restMethod.getRolesAllowed())
                     || (CollectionUtil.isNotEmpty(userRoles)
@@ -72,7 +72,7 @@ public class RestMethodHelper {
         String[] resourcePaths = resourcePath.split(FORWARD_SLASH, -1);
         boolean matched = true;
         for(int i = 1; i < resourcePaths.length; i++){
-            if(resourcePaths[i].equals(uriPaths[i])){
+            if(i < uriPaths.length && resourcePaths[i].equals(uriPaths[i])){
                 continue;
             }else if(resourcePaths[i].startsWith(LEFT_BRACE) && resourcePaths[i].endsWith(RIGHT_BRACE)){
                 String pathVariable = resourcePaths[i].substring(1, resourcePaths[i].length() - 1);

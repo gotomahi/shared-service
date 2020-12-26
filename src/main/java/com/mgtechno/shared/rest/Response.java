@@ -1,20 +1,29 @@
 package com.mgtechno.shared.rest;
 
+import com.mgtechno.shared.KeyValue;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Response {
     private int statusCode;
-    private Map<String, List<String>> headers;
+    private List<KeyValue> headers;
     private Object body;
 
     public Response(){
 
     }
 
-    public Response(int statusCode, Map<String, List<String>> headers, Object body) {
+    public Response(int statusCode, List<KeyValue> headers, Object body) {
         this.statusCode = statusCode;
         this.headers = headers;
+        this.body = body;
+    }
+
+    public Response(int statusCode, KeyValue header, Object body) {
+        this.statusCode = statusCode;
+        this.headers = new ArrayList<>();
+        headers.add(header);
         this.body = body;
     }
 
@@ -26,10 +35,6 @@ public class Response {
         this.statusCode = statusCode;
     }
 
-    public Map<String, List<String>> getHeaders() {
-        return headers;
-    }
-
     public Object getBody() {
         return body;
     }
@@ -38,7 +43,11 @@ public class Response {
         this.body = body;
     }
 
-    public void setHeaders(Map<String, List<String>> headers) {
+    public List<KeyValue> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(List<KeyValue> headers) {
         this.headers = headers;
     }
 }

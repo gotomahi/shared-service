@@ -1,5 +1,7 @@
 package com.mgtechno.shared.rest;
 
+import com.mgtechno.shared.KeyValue;
+
 import java.util.*;
 
 public enum HeaderType {
@@ -27,28 +29,32 @@ public enum HeaderType {
         return headers;
     }
 
-    public static Map<String, List<String>> corsHeaders(){
-        Map<String, List<String>> respHeaders = new HashMap<>();
-        List<String> acAllowOrigin = new ArrayList<>();
-        acAllowOrigin.add("*");
-        respHeaders.put("Access-Control-Allow-Origin", acAllowOrigin);
-        List<String> acAllowMethods = new ArrayList<>();
-        acAllowMethods.add("GET");
-        acAllowMethods.add("POST");
-        acAllowMethods.add("PUT");
-        acAllowMethods.add("DELETE");
-        acAllowMethods.add("OPTIONS");
-        respHeaders.put("Access-Control-Allow-Methods", acAllowMethods);
-        List<String> acAllowHeaders = new ArrayList<>();
-        acAllowHeaders.add("Content-Type");
-        acAllowHeaders.add("Authorization");
-        acAllowHeaders.add("Host");
-        acAllowHeaders.add("Referer");
-        respHeaders.put("Access-Control-Allow-Headers", acAllowHeaders);
-        List<String> hosts = new ArrayList<>();
-        hosts.add("*");
-        respHeaders.put("Host", hosts);
-        respHeaders.put("Referer", hosts);
-        return respHeaders;
+    public static List<KeyValue> corsHeaders(){
+        List<KeyValue> cors = new ArrayList<>();
+        cors.add(new KeyValue("Access-Control-Allow-Origin", "*"));
+        cors.add(new KeyValue("Access-Control-Allow-Methods","GET"));
+        cors.add(new KeyValue("Access-Control-Allow-Methods","POST"));
+        cors.add(new KeyValue("Access-Control-Allow-Methods","PUT"));
+        cors.add(new KeyValue("Access-Control-Allow-Methods","DELETE"));
+        cors.add(new KeyValue("Access-Control-Allow-Methods","OPTIONS"));
+        cors.add(new KeyValue("Access-Control-Allow-Headers", "Content-Type"));
+        cors.add(new KeyValue("Access-Control-Allow-Headers", "Authorization"));
+        cors.add(new KeyValue("Access-Control-Allow-Headers", "Host"));
+        cors.add(new KeyValue("Access-Control-Allow-Headers", "Referer"));
+        cors.add(new KeyValue("Host", "*"));
+        cors.add(new KeyValue("Referer", "*"));
+        return cors;
+    }
+
+    public static KeyValue pptHeaders() {
+        return new KeyValue("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+    }
+
+    public static KeyValue contentDisposition(String filename) {
+        return new KeyValue("Content-Disposition", "attchment; filename=" + filename);
+    }
+
+    public static KeyValue jsonContent() {
+        return new KeyValue("Content-Type", "application/json");
     }
 }

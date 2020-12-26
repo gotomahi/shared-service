@@ -1,7 +1,7 @@
 package com.mgtechno.shared.rest;
 
 import com.mgtechno.shared.KeyValue;
-import com.mgtechno.shared.json.ObjectToJsonMapper;
+import com.mgtechno.shared.json.JSON;
 import com.mgtechno.shared.util.CollectionUtil;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -9,13 +9,13 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.mgtechno.shared.rest.HttpStatus.SERVER_ERROR;
-import static com.mgtechno.shared.rest.RestConstant.*;
+import static com.mgtechno.shared.rest.RestConstant.CHARSET_UTF8;
+import static com.mgtechno.shared.rest.RestConstant.EMPTY_STRING;
 
 /**
  *
@@ -23,10 +23,8 @@ import static com.mgtechno.shared.rest.RestConstant.*;
 public class RequestHandler implements HttpHandler {
     private static final Logger LOG = Logger.getLogger(RequestHandler.class.getCanonicalName());
     private List<RestMethod> paths;
-    private ObjectToJsonMapper jsonMapper;
 
     public RequestHandler(String contextPath, Route... routes){
-        this.jsonMapper = new ObjectToJsonMapper();
         this.paths = RestMethodHelper.prepareRestMethods(contextPath, routes);
     }
 
@@ -39,8 +37,7 @@ public class RequestHandler implements HttpHandler {
             List<KeyValue> pathVars = new ArrayList<>();
             RestMethod restMethod = RestMethodHelper.findMatchedPath(paths, exchange, pathVars);
             if(restMethod == null){
-                response = new Response(HttpStatus.NOT_FOUND.code(),
-                        HeaderType.addHeader(null, HeaderType.JSON_CONTENT), "No resource found");
+                response = new Response(HttpStatus.NOT_FOUND.code(), HeaderType.jsonContent(), "No resource found");
             }else if(pathVars.isEmpty()) {
                 response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange);
             }else {
@@ -59,8 +56,8 @@ public class RequestHandler implements HttpHandler {
             }
             sendResponse(exchange, outputStream, response);
         }catch (Exception e){
-            sendResponse(exchange, outputStream, new Response(SERVER_ERROR.code(), new HashMap(), e.getMessage()));
             LOG.log(Level.SEVERE, "Failed to process request", e);
+            sendResponse(exchange, outputStream, new Response(SERVER_ERROR.code(), HeaderType.jsonContent(), e.getMessage()));
         }finally {
             if(outputStream != null){
                 outputStream.close();
@@ -70,20 +67,26 @@ public class RequestHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, OutputStream outputStream, Response response) throws IOException{
         if(CollectionUtil.isNotEmpty(response.getHeaders())) {
-            exchange.getResponseHeaders().putAll(response.getHeaders());
+            for(KeyValue kv : response.getHeaders()){
+                exchange.getResponseHeaders().add(kv.getKey(), (String)kv.getValue());
+            }
         }
 
+        byte[] responseBody = null;
         String body = EMPTY_STRING;
         if(response.getBody() != null && response.getBody() instanceof String){
             body = (String)response.getBody();
+            responseBody = body.getBytes(CHARSET_UTF8);
+        }else if(response.getBody() instanceof byte[]){
+            responseBody = (byte[])response.getBody();
         }else if(response.getBody() != null){
-            body = jsonMapper.toJson(response.getBody());
+            body = JSON.getJson().toJson(response.getBody());
+            responseBody = body.getBytes(CHARSET_UTF8);
         }
-
-        byte[] responseBody = body.getBytes(CHARSET_UTF8);
 
         exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);
         outputStream.write(responseBody);
         outputStream.flush();
+        outputStream.close();
     }
 }

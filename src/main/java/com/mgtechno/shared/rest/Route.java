@@ -1,6 +1,8 @@
 package com.mgtechno.shared.rest;
 
-import com.mgtechno.shared.json.JsonUtil;
+import com.google.gson.reflect.TypeToken;
+import com.mgtechno.shared.entity.Token;
+import com.mgtechno.shared.json.JSON;
 import com.mgtechno.shared.util.StringUtil;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -45,20 +47,20 @@ public interface Route {
     }
 
     default Long getCustomerId(HttpExchange exchange){
-        return Long.parseLong(getAuthPayloadProperty(exchange, "customerId").toString());
+        return Long.parseLong(getAuthPayloadProperty(exchange).getCustomerId().toString());
     }
 
     default Long getUserId(HttpExchange exchange){
-        return Long.parseLong(getAuthPayloadProperty(exchange, "userId").toString());
+        return Long.parseLong(getAuthPayloadProperty(exchange).getUserId().toString());
     }
 
-    default Object getAuthPayloadProperty(HttpExchange exchange, String property){
-        JWTToken jwtToken = new JWTToken();
+    default Token getAuthPayloadProperty(HttpExchange exchange){
         Map<String, String> headers = headers(exchange);
-        String authPayload = jwtToken.decodePayload(headers.get(HEADER_AUTHORIZATION));
-        return JsonUtil.getPropertyValue(authPayload, property);
+        String authPayload = JWTToken.getJwtToken().decodePayload(headers.get(HEADER_AUTHORIZATION));
+        Token token = JSON.getJson().fromJson(authPayload, new TypeToken<Token>(){}.getType());
+        return token;
     }
     default Response response(Object object){
-        return new Response(HttpStatus.SUCCESS.code(), HeaderType.addHeader(null, HeaderType.JSON_CONTENT), object);
+        return new Response(HttpStatus.SUCCESS.code(), HeaderType.jsonContent(), object);
     }
 }

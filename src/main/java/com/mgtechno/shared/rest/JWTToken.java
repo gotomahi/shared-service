@@ -1,6 +1,7 @@
 package com.mgtechno.shared.rest;
 
-import com.mgtechno.shared.json.JsonToObjectMapper;
+import com.google.gson.reflect.TypeToken;
+import com.mgtechno.shared.json.JSON;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -16,10 +17,13 @@ import static com.mgtechno.shared.rest.RestConstant.*;
 
 public class JWTToken {
     private static final Logger LOG = Logger.getLogger(JWTToken.class.getCanonicalName());
-    private JsonToObjectMapper objectMapper;
+    private static JWTToken jwtToken = null;
 
-    public JWTToken() {
-        objectMapper = new JsonToObjectMapper();
+    public static JWTToken getJwtToken() {
+        if(jwtToken == null){
+            jwtToken = new JWTToken();
+        }
+        return jwtToken;
     }
 
     public String createToken(String payload) {
@@ -44,7 +48,7 @@ public class JWTToken {
         if (payload.isEmpty()) {
             throw new Exception("Payload is Empty: ");
         }
-        Map<String, Object> tokenData = objectMapper.convertToMap(payload);
+        Map<String, Object> tokenData = JSON.getJson().fromJson(payload, new TypeToken<Map<String, Object>>(){}.getType());
         long exp = (Long)tokenData.get(TOKEN_EXPIRATION);
         if(System.currentTimeMillis() > exp){
             throw new Exception("Token is expired");
