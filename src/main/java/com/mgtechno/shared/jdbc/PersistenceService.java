@@ -20,8 +20,6 @@ public class PersistenceService {
 
     public <B> B persist(Connection con, B bean)throws Exception{
         Field[] fields = bean.getClass().getDeclaredFields();
-        Field id = Arrays.stream(fields).filter(field -> field.getAnnotation(Id.class) != null).findFirst().get();
-        id.setAccessible(true);
         bean = saveOrUpdate(con, bean);
         List<Field> mappedFields = Arrays.stream(fields)
                 .filter(field -> field.getAnnotation(MappedBy.class) != null)
@@ -30,12 +28,17 @@ public class PersistenceService {
             for(Field field: mappedFields){
                 field.setAccessible(true);
                 Object mappedBean = field.get(bean);
+                MappedBy mappedBy = field.getAnnotation(MappedBy.class);
+                Field mapField = Arrays.stream(fields)
+                        .filter(f -> field.getName().equals(mappedBy.property()))
+                        .findFirst().get();
+                mapField.setAccessible(true);
                 if(mappedBean instanceof Entity){
-                    setMappedValue(mappedBean, field.getAnnotation(MappedBy.class).property(), id.get(bean));
+                    setMappedValue(mappedBean, mappedBy.reference(), mapField.get(bean));
                     saveOrUpdate(con, mappedBean);
                 }else if(mappedBean instanceof Collection){
                     for(Object mappedEntity : ((Collection)mappedBean)){
-                        setMappedValue(mappedEntity, field.getAnnotation(MappedBy.class).property(), id.get(bean));
+                        setMappedValue(mappedEntity, mappedBy.reference(), mapField.get(bean));
                         saveOrUpdate(con, mappedEntity);
                     }
                 }

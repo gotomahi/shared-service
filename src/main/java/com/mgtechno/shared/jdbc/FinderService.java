@@ -45,18 +45,18 @@ public class FinderService {
                     field.set(bean, rs.getObject(field.getName(), field.getType()));
                 }
 
-
                 List<Field> mappedFields = Arrays.stream(fields)
                         .filter(field -> field.getAnnotation(MappedBy.class) != null)
                         .collect(Collectors.toList());
                 if(CollectionUtil.isNotEmpty(mappedFields)){
                     for(Field field: mappedFields){
                         field.setAccessible(true);
-                        Field mapValueField = Arrays.stream(fields)
-                                .filter(f -> f.getAnnotation(Id.class) != null).findFirst().get();
-                        mapValueField.setAccessible(true);
+                        MappedBy mappedBy = field.getAnnotation(MappedBy.class);
+                        Field mapField = Arrays.stream(fields)
+                                .filter(f -> f.getName().equals(mappedBy.property())).findFirst().get();
+                        mapField.setAccessible(true);
                         List<KeyValue> mappedCriteria = new ArrayList<>();
-                        mappedCriteria.add(new KeyValue(field.getAnnotation(MappedBy.class).property(), mapValueField.get(bean)));
+                        mappedCriteria.add(new KeyValue(mappedBy.reference(), mapField.get(bean)));
                         if(field.getType().isAssignableFrom(Entity.class)){
                             List childBeans = load(con, field.getType(), mappedCriteria);
                             field.set(bean, childBeans.get(0));
