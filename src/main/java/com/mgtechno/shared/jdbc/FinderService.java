@@ -10,10 +10,7 @@ import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -42,7 +39,16 @@ public class FinderService {
                         continue;
                     }
                     field.setAccessible(true);
-                    field.set(bean, rs.getObject(field.getName(), field.getType()));
+                    Object value = null;
+                    Class type = field.getType();
+                    if(type.getName().equals(Date.class.getName())){
+                        value = rs.getDate(field.getName());
+                    }else if(type.getName().equals(byte[].class.getName()) && rs.getBlob(field.getName()) != null){
+                        value = rs.getBlob(field.getName()).getBinaryStream().readAllBytes();
+                    }else{
+                        value = rs.getObject(field.getName(), type);
+                    }
+                    field.set(bean, value);
                 }
 
                 List<Field> mappedFields = Arrays.stream(fields)
@@ -57,7 +63,7 @@ public class FinderService {
                         mapField.setAccessible(true);
                         List<KeyValue> mappedCriteria = new ArrayList<>();
                         mappedCriteria.add(new KeyValue(mappedBy.reference(), mapField.get(bean)));
-                        if(field.getType().isAssignableFrom(Entity.class)){
+                        if(Arrays.stream(field.getType().getInterfaces()).anyMatch(it -> it.getName().equals(Entity.class.getName()))){
                             List childBeans = load(con, field.getType(), mappedCriteria);
                             field.set(bean, childBeans.get(0));
                         }else if(field.getType().isAssignableFrom(Collection.class)){

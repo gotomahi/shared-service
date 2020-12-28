@@ -30,8 +30,7 @@ public class PersistenceService {
                 Object mappedBean = field.get(bean);
                 MappedBy mappedBy = field.getAnnotation(MappedBy.class);
                 Field mapField = Arrays.stream(fields)
-                        .filter(f -> field.getName().equals(mappedBy.property()))
-                        .findFirst().get();
+                        .filter(f -> f.getName().equals(mappedBy.property())).findFirst().get();
                 mapField.setAccessible(true);
                 if(mappedBean instanceof Entity){
                     setMappedValue(mappedBean, mappedBy.reference(), mapField.get(bean));

@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,7 +45,9 @@ public class RequestHandler implements HttpHandler {
                 Object[] params = new Object[pathVars.size()];
                 int i = 0;
                 for(KeyValue keyValue : pathVars){
-                    params[i] = keyValue.getValue();
+                    Constructor constructor = restMethod.getMethod().getParameterTypes()[i + 1]
+                            .getDeclaredConstructor(new Class[]{String.class});
+                    params[i++] = constructor.newInstance(keyValue.getValue());
                 }
                 if(restMethod.getMethod().getParameterCount() == 2) {
                     response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0]);
@@ -82,6 +85,8 @@ public class RequestHandler implements HttpHandler {
         }else if(response.getBody() != null){
             body = JSON.getJson().toJson(response.getBody());
             responseBody = body.getBytes(CHARSET_UTF8);
+        }else{
+            responseBody = body.getBytes();
         }
 
         exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);

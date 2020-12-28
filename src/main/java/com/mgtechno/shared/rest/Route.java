@@ -6,6 +6,7 @@ import com.mgtechno.shared.json.JSON;
 import com.mgtechno.shared.util.StringUtil;
 import com.sun.net.httpserver.HttpExchange;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,9 +41,11 @@ public interface Route {
     }
 
     default String body(HttpExchange exchange) throws IOException {
-        byte[] data = new byte[exchange.getRequestBody().available()];
-        exchange.getRequestBody().read(data);
-        String body = new String(data, CHARSET_UTF8);
+        String body = null;
+        try(BufferedInputStream bis = new BufferedInputStream(exchange.getRequestBody())) {
+            byte[] data = bis.readAllBytes();
+            body = new String(data, CHARSET_UTF8);
+        }
         return body;
     }
 
