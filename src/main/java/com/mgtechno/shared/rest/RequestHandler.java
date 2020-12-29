@@ -39,23 +39,16 @@ public class RequestHandler implements HttpHandler {
             RestMethod restMethod = RestMethodHelper.findMatchedPath(paths, exchange, pathVars);
             if(restMethod == null){
                 response = new Response(HttpStatus.NOT_FOUND.code(), HeaderType.jsonContent(), "No resource found");
-            }else if(pathVars.isEmpty()) {
-                response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange);
             }else {
-                Object[] params = new Object[pathVars.size()];
+                Object[] params = new Object[pathVars.size()+1];
                 int i = 0;
+                params[i++] = exchange;
                 for(KeyValue keyValue : pathVars){
-                    Constructor constructor = restMethod.getMethod().getParameterTypes()[i + 1]
+                    Constructor constructor = restMethod.getMethod().getParameterTypes()[i]
                             .getDeclaredConstructor(new Class[]{String.class});
                     params[i++] = constructor.newInstance(keyValue.getValue());
                 }
-                if(restMethod.getMethod().getParameterCount() == 2) {
-                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0]);
-                }else if(restMethod.getMethod().getParameterCount() == 3) {
-                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0], params[1]);
-                }else if(restMethod.getMethod().getParameterCount() == 4) {
-                    response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), exchange, params[0], params[1], params[2]);
-                }
+                response = (Response) restMethod.getMethod().invoke(restMethod.getRoute(), params);
             }
             sendResponse(exchange, outputStream, response);
         }catch (Exception e){
