@@ -6,6 +6,7 @@ import com.mgtechno.shared.util.CollectionUtil;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
@@ -33,7 +34,7 @@ public class RequestHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         Response response = null;
         String uriPath = exchange.getRequestURI().getPath();
-        OutputStream outputStream = exchange.getResponseBody();
+        OutputStream outputStream = null;//exchange.getResponseBody();
         try {
             List<KeyValue> pathVars = new ArrayList<>();
             RestMethod restMethod = RestMethodHelper.findMatchedPath(paths, exchange, pathVars);
@@ -81,10 +82,10 @@ public class RequestHandler implements HttpHandler {
         }else{
             responseBody = body.getBytes();
         }
-
-        exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);
-        outputStream.write(responseBody);
-        outputStream.flush();
-        outputStream.close();
+        try(OutputStream bos = exchange.getResponseBody()) {
+            exchange.sendResponseHeaders(response.getStatusCode(), responseBody.length);
+            bos.write(responseBody);
+            bos.flush();
+        }
     }
 }
