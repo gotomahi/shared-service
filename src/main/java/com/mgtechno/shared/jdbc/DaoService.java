@@ -82,6 +82,15 @@ public class DaoService {
         return beans;
     }
 
+    public <B> List<B> findByQuery(String query, List<KeyValue> criteria, Class<B> resultClass)throws Exception{
+        try{
+            return finderService.findByQuery(localConn.get(), query, criteria, resultClass);
+        }catch (Exception e){
+            LOG.log(Level.SEVERE, "failed to find query" + query + " with criteria " + criteria, e);
+            throw e;
+        }
+    }
+
     public <B> List<B> findByQuery(String query, List<KeyValue> criteria)throws Exception{
         try{
             return finderService.findByQuery(localConn.get(), query, criteria);

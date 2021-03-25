@@ -50,6 +50,10 @@ public enum HeaderType {
         return new KeyValue("Content-Type", "application/vnd.openxmlformats-officedocument.presentationml.presentation");
     }
 
+    public static KeyValue htmlHeaders() {
+        return new KeyValue("Content-Type", "text/html");
+    }
+
     public static KeyValue contentDisposition(String filename) {
         return new KeyValue("Content-Disposition", "attchment; filename=" + filename);
     }

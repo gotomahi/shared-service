@@ -60,7 +60,8 @@ public class PersistenceService {
             int i = 1;
             for(Field field : fields){
                 field.setAccessible(true);
-                if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null){
+                if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null
+                    || field.getAnnotation(Ignore.class) != null){
                     continue;
                 }
                 Object value = field.get(bean);
@@ -125,7 +126,8 @@ public class PersistenceService {
         query.append(table).append("( ");
         int i = 1;
         for(Field field : fields){
-            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null){
+            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null
+                    || field.getAnnotation(Ignore.class) != null){
                 continue;
             }
             query.append(i > 1 ? ", " : "").append(field.getName());
@@ -134,7 +136,8 @@ public class PersistenceService {
         query.append(" ) values (");
         int j = 1;
         for (Field field : fields) {
-            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null){
+            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null
+                    || field.getAnnotation(Ignore.class) != null){
                 continue;
             }
             query.append(j++ > 1 ? ", " : "").append("?");
@@ -148,7 +151,8 @@ public class PersistenceService {
         query.append(table).append(" set ");
         int i = 1;
         for(Field field : fields){
-            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null){
+            if(field.getAnnotation(Id.class) != null || field.getAnnotation(MappedBy.class) != null
+                    || field.getAnnotation(Ignore.class) != null){
                 continue;
             }
             query.append(i++ > 1 ? ", " : "").append(field.getName()).append("=?");

@@ -49,7 +49,7 @@ public class JWTToken {
             throw new Exception("Payload is Empty: ");
         }
         Map<String, Object> tokenData = JSON.getJson().fromJson(payload, new TypeToken<Map<String, Object>>(){}.getType());
-        long exp = (Long)tokenData.get(TOKEN_EXPIRATION);
+        long exp = ((Double)tokenData.get(TOKEN_EXPIRATION)).longValue();
         if(System.currentTimeMillis() > exp){
             throw new Exception("Token is expired");
         }

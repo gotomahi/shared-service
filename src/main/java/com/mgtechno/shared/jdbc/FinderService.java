@@ -35,7 +35,7 @@ public class FinderService {
                 B bean = clazz.getDeclaredConstructor().newInstance();
                 Field[] fields = bean.getClass().getDeclaredFields();
                 for(Field field: fields){
-                    if(field.getAnnotation(MappedBy.class) != null){
+                    if(field.getAnnotation(MappedBy.class) != null || field.getAnnotation(Ignore.class) != null){
                         continue;
                     }
                     field.setAccessible(true);
@@ -66,9 +66,9 @@ public class FinderService {
                         if(Arrays.stream(field.getType().getInterfaces()).anyMatch(it -> it.getName().equals(Entity.class.getName()))){
                             List childBeans = load(con, field.getType(), mappedCriteria);
                             field.set(bean, childBeans.get(0));
-                        }else if(field.getType().isAssignableFrom(Collection.class)){
+                        }else if(field.getType().isAssignableFrom(List.class)){
                             Type genType = ((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
-                            List childBeans = load(con, genType.getClass(), mappedCriteria);
+                            List childBeans = load(con, (Class)genType, mappedCriteria);
                             field.set(bean, childBeans);
                         }
                     }
@@ -82,6 +82,10 @@ public class FinderService {
     }
 
     protected <B> List<B> findByQuery(Connection con, String query, List<KeyValue> criteria)throws Exception{
+        return findByQuery(con, query, criteria, null);
+    }
+
+    protected <B> List<B> findByQuery(Connection con, String query, List<KeyValue> criteria, Class<B> resultClass)throws Exception{
         List<B> result = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -95,7 +99,13 @@ public class FinderService {
             }
             rs = ps.executeQuery();
             while(rs.next()){
-                result.add((B)rs.getObject(1));
+                B resultBean = (B)resultClass.getDeclaredConstructor().newInstance();
+                Field[] fields = resultClass.getDeclaredFields();
+                for(Field field: fields){
+                    field.setAccessible(true);
+                    field.set(resultBean, rs.getObject(field.getName()));
+                }
+                result.add(resultBean);
             }
         }finally {
             close(ps, rs);
