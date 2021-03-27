@@ -34,11 +34,11 @@ public class PersistenceService {
                 mapField.setAccessible(true);
                 if(mappedBean instanceof Entity){
                     setMappedValue(mappedBean, mappedBy.reference(), mapField.get(bean));
-                    saveOrUpdate(con, mappedBean);
+                    persist(con, mappedBean);
                 }else if(mappedBean instanceof Collection){
                     for(Object mappedEntity : ((Collection)mappedBean)){
                         setMappedValue(mappedEntity, mappedBy.reference(), mapField.get(bean));
-                        saveOrUpdate(con, mappedEntity);
+                        persist(con, mappedEntity);
                     }
                 }
             }
