@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface MappedBy {
     String property();
     String reference();
+    boolean lazy() default false;
 }

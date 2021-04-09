@@ -52,7 +52,7 @@ public class FinderService {
                 }
 
                 List<Field> mappedFields = Arrays.stream(fields)
-                        .filter(field -> field.getAnnotation(MappedBy.class) != null)
+                        .filter(field -> field.getAnnotation(MappedBy.class) != null && !field.getAnnotation(MappedBy.class).lazy())
                         .collect(Collectors.toList());
                 if(CollectionUtil.isNotEmpty(mappedFields)){
                     for(Field field: mappedFields){
