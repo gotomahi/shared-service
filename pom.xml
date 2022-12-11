@@ -50,8 +50,8 @@
 						<releaseBranchPrefix>release</releaseBranchPrefix>
 						<hotfixBranchPrefix>hotfix</hotfixBranchPrefix>
 					</flowInitContext>
-					<username>${env.GITHUB_USERNAME}</username>
-					<password>${env.GITHUB_PASSWORD}</password>
+					<username>gotomahi</username>
+					<password>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</password>
 					<noDeploy>true</noDeploy>
 					<squash>true</squash>
 				</configuration>
